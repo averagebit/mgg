@@ -34,11 +34,13 @@ func generate() error {
 		dest = strings.Replace(dest, pathSeparator, mockPathSeparatorPrefix, -1)
 		dest = mockFolder + dest
 
+		src = strings.TrimPrefix(src, cwd)
+		src = strings.TrimPrefix(src, pathSeparator)
 		cmd := exec.Command("mockgen", "-source", src, "-destination", dest)
 		if err := cmd.Run(); err != nil {
 			return err
 		}
-		fmt.Printf("Generated '%s'", strings.TrimPrefix(dest, cwd))
+		fmt.Printf("Generated '%s'\n", strings.TrimPrefix(dest, cwd))
 	}
 
 	return nil
