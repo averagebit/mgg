@@ -1,4 +1,4 @@
-# mgutil
+# mgg
 
 Scans all files in your project. If the path doesn't contain '_test',
 ends in '.go' and file contains 'interface {' it generates a mock for
@@ -25,5 +25,6 @@ Requires [mockgen](https://github.com/golang/mock) installed.
 * Support flags to set a custom directory and prefix for generated
   mocks.
 * Support flag for ignoring certain files/directories when scanning.
-
-
+  Respect .gitignore
+* Support flag for generating only updated files. git diff
+* Support flag for dry runs
