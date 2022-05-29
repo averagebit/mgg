@@ -5,6 +5,16 @@ the prefix flag, ends in `.go` and file contains `interface {` it
 generates mocks for that interface using
 [mockgen](https://github.com/golang/mock).
 
+## Dependencies
+
+- [mockgen](https://github.com/golang/mock)
+
+## Installation
+
+```
+go install github.com/averagebit/mgg@latest
+```
+
 ## Usage
 
 ```
@@ -18,7 +28,7 @@ generates mocks for that interface using
 #     -i, --ignore    Paths to ignore when scanning for interfaces [default: ['']]
 ```
 
-Example:
+### Example
 
 ```
 # .
@@ -36,16 +46,6 @@ Example:
 
 $ mgg --dir=mocks --prefix=mock_ --ignore=main.go,pkg/logger.go
 Generated 'mocks/mock_pkg/mock_pubsub.go'
-```
-
-## Dependencies
-
-- [mockgen](https://github.com/golang/mock)
-
-## Installation
-
-```
-go install github.com/averagebit/mgg@latest
 ```
 
 ## TODO:
