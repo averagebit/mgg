@@ -15,8 +15,7 @@ Usage:
 #     -h, --help	  Prints this message
 #     -d, --dir       Directory to generate mocks in [default: 'mocks']
 #     -p, --prefix    Prefix to use for mock files [default: 'mock_']
-#     -r, --remove    Remove old mock files [default: false]
-#     -i, --ignore    Paths to ignore when removing and scanning for interfaces [default: ['']]
+#     -i, --ignore    Paths to ignore when scanning for interfaces [default: ['']]
 ```
 
 Example:
@@ -35,8 +34,7 @@ Example:
 #     |--- logger.go # has interface
 #     |--- pubsub.go # has interface
 
-$ mgg --remove --dir=mocks --prefix=mock_ --ignore=main.go,pkg/logger.go
-Removed 'mocks/mock_pkg/mock_pubsub.go'
+$ mgg --dir=mocks --prefix=mock_ --ignore=main.go,pkg/logger.go
 Generated 'mocks/mock_pkg/mock_pubsub.go'
 ```
 
@@ -45,7 +43,5 @@ Requires [mockgen](https://github.com/golang/mock) installed.
 ### TODO:
 
 * Respect `.gitignore`.
-* Support flag for generating only updated files using `git diff`
-* Support flag for dry runs
 * Support passing flags to `mockgen`
 * Create unit tests
