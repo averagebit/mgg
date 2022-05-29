@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"errors"
+	"flag"
 	"fmt"
 	"io/fs"
 	"os"
@@ -10,7 +12,23 @@ import (
 	"strings"
 )
 
+var flags struct {
+	remove bool
+	dir    string
+	prefix string
+}
+
+func init() {
+	flag.BoolVar(&flags.remove, "remove", false, "remove old mock files before generating")
+	flag.BoolVar(&flags.remove, "r", false, "remove old mock files before generating shorthand")
+	flag.StringVar(&flags.dir, "dir", "mocks", "`directory` to generate mock files in")
+	flag.StringVar(&flags.dir, "d", "mocks", "`directory` to generate mock files in shorthand")
+	flag.StringVar(&flags.prefix, "prefix", "mock_", "`prefix` to use for mock files")
+	flag.StringVar(&flags.prefix, "p", "mock_", "`prefix` to use for mock files shorthand")
+}
+
 func main() {
+	flag.Parse()
 	if err := generate(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
@@ -18,15 +36,28 @@ func main() {
 }
 
 func generate() error {
+	cwd, _ := os.Getwd()
+
+	_, err := os.Stat(filepath.Join(cwd, flags.dir))
+	if flags.remove && !errors.Is(err, os.ErrNotExist) {
+		if err := os.RemoveAll(filepath.Join(cwd, flags.dir)); err != nil {
+			return err
+		}
+	}
+
+	_, err = os.Stat(filepath.Join(cwd, "go.mod"))
+	if errors.Is(err, os.ErrNotExist) {
+		return errors.New("go.mod not found")
+	}
+
 	files, err := getFiles()
 	if err != nil {
 		return err
 	}
 
-	cwd, _ := os.Getwd()
 	pathSeparator := string(os.PathSeparator)
-	mockFolder := filepath.Join(cwd, "mocks")
-	mockPrefix := "mock_"
+	mockFolder := filepath.Join(cwd, flags.dir)
+	mockPrefix := flags.prefix
 	mockPathSeparatorPrefix := pathSeparator + mockPrefix
 
 	for _, src := range files {
@@ -55,10 +86,9 @@ func getFiles() ([]string, error) {
 			return err
 		}
 
-		isGoFile := strings.HasSuffix(path, ".go")
-		isTestFile := strings.Contains(path, "_test")
-
-		if isGoFile && !isTestFile {
+		if strings.HasSuffix(path, ".go") &&
+			!strings.Contains(path, "_test") &&
+			!strings.Contains(path, "mock") {
 			file, err := os.Open(path)
 			if err != nil {
 				return err
