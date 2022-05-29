@@ -12,7 +12,7 @@ generates mocks for that interface using
 #     mgg [OPTIONS]
 #
 # OPTIONS:
-#     -h, --help	  Prints this message
+#     -h, --help      Prints this help message
 #     -d, --dir       Directory to generate mocks in [default: 'mocks']
 #     -p, --prefix    Prefix to use for mock files [default: 'mock_']
 #     -i, --ignore    Paths to ignore when scanning for interfaces [default: ['']]
@@ -51,5 +51,5 @@ go install github.com/averagebit/mgg@latest
 ## TODO:
 
 - Respect `.gitignore`.
-- Support passing flags to `mockgen`
-- Create unit tests
+- Support passing flags to `mockgen`.
+- Create unit tests.
