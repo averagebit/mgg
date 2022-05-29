@@ -25,21 +25,18 @@ func (i *stringSlice) Set(value string) error {
 	return nil
 }
 
-var helpMessage = `
-USAGE:
+var helpMessage = `USAGE:
     mgg [OPTIONS]
 
 OPTIONS:
-	-h, --help		Prints this message
+    -h, --help      Prints this message
     -d, --dir       Directory to generate mocks in [default: 'mocks']
-    -p, --prefix    Prefix to use for mock files [default: 'mock_']
-    -r, --remove    Remove old mock files [default: false]
-    -i, --ignore    Paths to ignore when removing and scanning for interfaces [default: ['']]
+    -p, --prefix    Prefix to use for generated mocks [default: 'mock_']
+    -i, --ignore    Paths to ignore when scanning for interfaces [default: ['']]
 `
 
 var flags struct {
 	help   bool
-	remove bool
 	dir    string
 	prefix string
 	ignore stringSlice
@@ -48,14 +45,12 @@ var flags struct {
 func init() {
 	flag.BoolVar(&flags.help, "help", false, "Prints this message")
 	flag.BoolVar(&flags.help, "h", false, "Prints this message shorthand")
-	flag.BoolVar(&flags.remove, "remove", false, "Remove old mock files")
-	flag.BoolVar(&flags.remove, "r", false, "Remove old mock files shorthand")
 	flag.StringVar(&flags.dir, "dir", "mocks", "`Directory` to generate mocks in")
-	flag.StringVar(&flags.dir, "d", "mocks", "`Directory` to generate mocks in shorthan")
-	flag.StringVar(&flags.prefix, "prefix", "mock_", "`Prefix` to use for mock files")
-	flag.StringVar(&flags.prefix, "p", "mock_", "`Prefix` to use for mock files shorthand")
-	flag.Var(&flags.ignore, "ignore", "`Paths` to ignore when removing and scanning for interfaces")
-	flag.Var(&flags.ignore, "i", "`Paths` to ignore when removing and scanning for interfaces")
+	flag.StringVar(&flags.dir, "d", "mocks", "`Directory` to generate mocks in shorthand")
+	flag.StringVar(&flags.prefix, "prefix", "mock_", "`Prefix` to use for generated mocks")
+	flag.StringVar(&flags.prefix, "p", "mock_", "`Prefix` to use for generated mocks")
+	flag.Var(&flags.ignore, "ignore", "`Paths` to ignore when scanning for interfaces")
+	flag.Var(&flags.ignore, "i", "`Paths` to ignore when scanning for interfaces")
 }
 
 func main() {
@@ -96,17 +91,6 @@ func generate() error {
 		dest = filepath.Join(mockFolder, dest)
 		src = strings.TrimPrefix(src, cwd)
 		src = strings.TrimPrefix(src, pathSeparator)
-
-		if flags.remove {
-			info, err := os.Stat(dest)
-			if !errors.Is(err, os.ErrNotExist) && !info.IsDir() {
-				if err := os.Remove(dest); err != nil {
-					return err
-				}
-				fmt.Printf("Removed '%s'\n", dest)
-			}
-
-		}
 
 		if !strings.Contains(src, flags.prefix) {
 			cmd := exec.Command("mockgen", "-source", src, "-destination", dest)
