@@ -12,23 +12,60 @@ import (
 	"strings"
 )
 
+type stringSlice []string
+
+func (i *stringSlice) String() string {
+	return strings.Join(*i, ",")
+}
+
+func (i *stringSlice) Set(value string) error {
+	for _, path := range strings.Split(value, ",") {
+		*i = append(*i, path)
+	}
+	return nil
+}
+
+var helpMessage = `
+USAGE:
+    mgg [OPTIONS]
+
+OPTIONS:
+	-h, --help		Prints this message
+    -d, --dir       Directory to generate mocks in [default: 'mocks']
+    -p, --prefix    Prefix to use for mock files [default: 'mock_']
+    -r, --remove    Remove old mock files [default: false]
+    -i, --ignore    Paths to ignore when removing and scanning for interfaces [default: ['']]
+`
+
 var flags struct {
+	help   bool
 	remove bool
 	dir    string
 	prefix string
+	ignore stringSlice
 }
 
 func init() {
-	flag.BoolVar(&flags.remove, "remove", false, "remove old mock files before generating")
-	flag.BoolVar(&flags.remove, "r", false, "remove old mock files before generating shorthand")
-	flag.StringVar(&flags.dir, "dir", "mocks", "`directory` to generate mock files in")
-	flag.StringVar(&flags.dir, "d", "mocks", "`directory` to generate mock files in shorthand")
-	flag.StringVar(&flags.prefix, "prefix", "mock_", "`prefix` to use for mock files")
-	flag.StringVar(&flags.prefix, "p", "mock_", "`prefix` to use for mock files shorthand")
+	flag.BoolVar(&flags.help, "help", false, "Prints this message")
+	flag.BoolVar(&flags.help, "h", false, "Prints this message shorthand")
+	flag.BoolVar(&flags.remove, "remove", false, "Remove old mock files")
+	flag.BoolVar(&flags.remove, "r", false, "Remove old mock files shorthand")
+	flag.StringVar(&flags.dir, "dir", "mocks", "`Directory` to generate mocks in")
+	flag.StringVar(&flags.dir, "d", "mocks", "`Directory` to generate mocks in shorthan")
+	flag.StringVar(&flags.prefix, "prefix", "mock_", "`Prefix` to use for mock files")
+	flag.StringVar(&flags.prefix, "p", "mock_", "`Prefix` to use for mock files shorthand")
+	flag.Var(&flags.ignore, "ignore", "`Paths` to ignore when removing and scanning for interfaces")
+	flag.Var(&flags.ignore, "i", "`Paths` to ignore when removing and scanning for interfaces")
 }
 
 func main() {
 	flag.Parse()
+
+	if flags.help {
+		fmt.Println(helpMessage)
+		return
+	}
+
 	if err := generate(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
@@ -38,14 +75,7 @@ func main() {
 func generate() error {
 	cwd, _ := os.Getwd()
 
-	_, err := os.Stat(filepath.Join(cwd, flags.dir))
-	if flags.remove && !errors.Is(err, os.ErrNotExist) {
-		if err := os.RemoveAll(filepath.Join(cwd, flags.dir)); err != nil {
-			return err
-		}
-	}
-
-	_, err = os.Stat(filepath.Join(cwd, "go.mod"))
+	_, err := os.Stat(filepath.Join(cwd, "go.mod"))
 	if errors.Is(err, os.ErrNotExist) {
 		return errors.New("go.mod not found")
 	}
@@ -56,22 +86,35 @@ func generate() error {
 	}
 
 	pathSeparator := string(os.PathSeparator)
-	mockFolder := filepath.Join(cwd, flags.dir)
+	mockFolder := flags.dir
 	mockPrefix := flags.prefix
 	mockPathSeparatorPrefix := pathSeparator + mockPrefix
 
 	for _, src := range files {
 		dest := strings.TrimPrefix(src, cwd)
 		dest = strings.Replace(dest, pathSeparator, mockPathSeparatorPrefix, -1)
-		dest = mockFolder + dest
-
+		dest = filepath.Join(mockFolder, dest)
 		src = strings.TrimPrefix(src, cwd)
 		src = strings.TrimPrefix(src, pathSeparator)
-		cmd := exec.Command("mockgen", "-source", src, "-destination", dest)
-		if err := cmd.Run(); err != nil {
-			return err
+
+		if flags.remove {
+			info, err := os.Stat(dest)
+			if !errors.Is(err, os.ErrNotExist) && !info.IsDir() {
+				if err := os.Remove(dest); err != nil {
+					return err
+				}
+				fmt.Printf("Removed '%s'\n", dest)
+			}
+
 		}
-		fmt.Printf("Generated '%s'\n", strings.TrimPrefix(dest, cwd))
+
+		if !strings.Contains(src, flags.prefix) {
+			cmd := exec.Command("mockgen", "-source", src, "-destination", dest)
+			if err := cmd.Run(); err != nil {
+				return err
+			}
+			fmt.Printf("Generated '%s'\n", strings.TrimPrefix(dest, cwd))
+		}
 	}
 
 	return nil
@@ -86,9 +129,13 @@ func getFiles() ([]string, error) {
 			return err
 		}
 
-		if strings.HasSuffix(path, ".go") &&
-			!strings.Contains(path, "_test") &&
-			!strings.Contains(path, "mock") {
+		for _, ignorePath := range flags.ignore {
+			if strings.Contains(path, ignorePath) {
+				return nil
+			}
+		}
+
+		if strings.HasSuffix(path, ".go") && !strings.Contains(path, "_test") {
 			file, err := os.Open(path)
 			if err != nil {
 				return err
