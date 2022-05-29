@@ -1,39 +1,51 @@
 # mgg
 
 Scans all files in your project. If the path doesn't contain '_test',
-ends in '.go' and file contains 'interface {' it generates a mock for
-that interface using [mockgen](https://github.com/golang/mock).
+the prefix flag, ends in '.go' and file contains 'interface {' it
+generates mocks for that interface using
+[mockgen](https://github.com/golang/mock).
 
-Mocks are generated in the current working directory under the 'mocks'
-folder and use the original file path with each section prefixed with
-'mock_'.
+Usage:
+
+```
+# USAGE:
+#     mgg [OPTIONS]
+# 
+# OPTIONS:
+#     -h, --help	  Prints this message
+#     -d, --dir       Directory to generate mocks in [default: 'mocks']
+#     -p, --prefix    Prefix to use for mock files [default: 'mock_']
+#     -r, --remove    Remove old mock files [default: false]
+#     -i, --ignore    Paths to ignore when removing and scanning for interfaces [default: ['']]
+```
 
 Example:
 
 ```
-# Source:
-#   app/app.go
-#
-# Generates:
-#   mocks/mock_app/mock_app.go
-# 
-# USAGE:
-#     mgg [FLAGS]
-# 
-# FLAGS:
-#     -d, --dir       directory to generate mock files in
-#     -r, --remove    remove old mock files before generating
-#     -p, --prefix    prefix to use for mock files shorthand
+# .
+# |--- .git
+# |--- README.md
+# |--- go.mod
+# |--- main.go # has interface
+# |--- mocks
+#     |--- mock_pkg
+#         |--- mock_logger.go
+#         |--- mock_pubsub.go
+# |--- pkg
+#     |--- logger.go # has interface
+#     |--- pubsub.go # has interface
 
-$ mgg --remove --dir=mocks --prefix=mock_
+$ mgg --remove --dir=mocks --prefix=mock_ --ignore=main.go,pkg/logger.go
+Removed 'mocks/mock_pkg/mock_pubsub.go'
+Generated 'mocks/mock_pkg/mock_pubsub.go'
 ```
 
 Requires [mockgen](https://github.com/golang/mock) installed.
 
 ### TODO:
 
-* Support flag for ignoring certain files/directories when scanning.
-  Respect .gitignore
-* Support flag for generating only updated files. git diff
+* Respect `.gitignore`.
+* Support flag for generating only updated files using `git diff`
 * Support flag for dry runs
 * Support passing flags to `mockgen`
+* Create unit tests
