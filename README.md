@@ -1,16 +1,16 @@
 # mgg
 
-Scans all files in your project. If the path doesn't contain '_test',
-the prefix flag, ends in '.go' and file contains 'interface {' it
+Scans all files in your project. If the path doesn't contain `_test`,
+the prefix flag, ends in `.go` and file contains `interface {` it
 generates mocks for that interface using
 [mockgen](https://github.com/golang/mock).
 
-Usage:
+## Usage
 
 ```
 # USAGE:
 #     mgg [OPTIONS]
-# 
+#
 # OPTIONS:
 #     -h, --help	  Prints this message
 #     -d, --dir       Directory to generate mocks in [default: 'mocks']
@@ -38,10 +38,18 @@ $ mgg --dir=mocks --prefix=mock_ --ignore=main.go,pkg/logger.go
 Generated 'mocks/mock_pkg/mock_pubsub.go'
 ```
 
-Requires [mockgen](https://github.com/golang/mock) installed.
+## Dependencies
 
-### TODO:
+- [mockgen](https://github.com/golang/mock)
 
-* Respect `.gitignore`.
-* Support passing flags to `mockgen`
-* Create unit tests
+## Installation
+
+```
+go install github.com/averagebit/mgg@latest
+```
+
+## TODO:
+
+- Respect `.gitignore`.
+- Support passing flags to `mockgen`
+- Create unit tests
