@@ -16,15 +16,24 @@ Example:
 #
 # Generates:
 #   mocks/mock_app/mock_app.go
+# 
+# USAGE:
+#     mgg [FLAGS]
+# 
+# FLAGS:
+#     -d, --dir       directory to generate mock files in
+#     -r, --remove    remove old mock files before generating
+#     -p, --prefix    prefix to use for mock files shorthand
+
+$ mgg --remove --dir=mocks --prefix=mock_
 ```
 
 Requires [mockgen](https://github.com/golang/mock) installed.
 
 ### TODO:
 
-* Support flags to set a custom directory and prefix for generated
-  mocks.
 * Support flag for ignoring certain files/directories when scanning.
   Respect .gitignore
 * Support flag for generating only updated files. git diff
 * Support flag for dry runs
+* Support passing flags to `mockgen`
